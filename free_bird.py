@@ -1,3 +1,8 @@
+## @Author  : enesergul
+## @Time    : 07/2019
+## @OS      : Win10
+## @Software: PyCharm
+
 from itertools import cycle
 import random
 import sys
@@ -8,31 +13,41 @@ from pygame.locals import *
 FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
-PIPEGAPSIZE  = 200 # boru genisligi
+PIPEGAPSIZE  = 100
 BASEY        = SCREENHEIGHT * 0.79
-# 
-IMAGES, SOUNDS, HITMASKS = {}, {}, {}
 
+IMAGES, SOUNDS, HITMASKS = {}, {}, {}
 
 PLAYERS_LIST = (
     # red bird
     (
-        'assets/sprites/redbird-upflap.png',
+        'assets/sprites/yellowbird-upflap.png',
         'assets/sprites/redbird-midflap.png',
         'assets/sprites/redbird-downflap.png',
     ),
-    
+    # blue bird
+    (
+        'assets/sprites/redbird-upflap.png',
+        'assets/sprites/bluebird-midflap.png',
+        'assets/sprites/bluebird-downflap.png',
+    ),
+    # yellow bird
+    (
+        'assets/sprites/bluebird-upflap.png',
+        'assets/sprites/yellowbird-midflap.png',
+        'assets/sprites/yellowbird-downflap.png',
+    ),
 )
 
-# 
+
 BACKGROUNDS_LIST = (
-    'assets/sprites/tabanyeni.png',
-
+    'assets/sprites/background-day.png',
+    'assets/sprites/background-night.png',
 )
 
-# 
+
 PIPES_LIST = (
- 
+    'assets/sprites/pipe-green.png',
     'assets/sprites/pipe-red.png',
 )
 
@@ -44,14 +59,14 @@ except NameError:
 
 
 def main():
-    #ana fonksiyon, ilk çalısır
+    #ana fonksiyon, ilk çalisir
     global SCREEN, FPSCLOCK
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
     SCREEN = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
-    pygame.display.set_caption('Flappy Bird')  #ekranın sol usttekı yazı
+    pygame.display.set_caption('flappy bird')  #ekranin sol ustteki yazi
 
-    # numbers sprites for score display
+    # scoru gosteren numaralar
     IMAGES['numbers'] = (
         pygame.image.load('assets/sprites/0.png').convert_alpha(),
         pygame.image.load('assets/sprites/1.png').convert_alpha(),
@@ -65,42 +80,41 @@ def main():
         pygame.image.load('assets/sprites/9.png').convert_alpha()
     )
 
-    # game over sprite
+
     IMAGES['gameover'] = pygame.image.load('assets/sprites/gameover.png').convert_alpha()
-    # message sprite for welcome screen
+
+
     IMAGES['message'] = pygame.image.load('assets/sprites/message.png').convert_alpha()
-    # base (ground) sprite
+
     IMAGES['base'] = pygame.image.load('assets/sprites/base.png').convert_alpha()
 
-    # sounds
-    # dosya uzantıları belırlenıyor
+
+    # dosya uzantilari belirleniyor
     if 'win' in sys.platform:
         soundExt = '.wav'
     else:
         soundExt = '.ogg'
 
-    #SOUNDS['die']   = pygame.mixer
-    SOUNDS['die'] = pygame.mixer.Sound('assets/audio/die' + soundExt)
+    SOUNDS['die']   = pygame.mixer
+   # SOUNDS['die'] = pygame.mixer.Sound('assets/audio/die' + soundExt)
     SOUNDS['hit']    = pygame.mixer.Sound('assets/audio/hit' + soundExt)
     SOUNDS['point']  = pygame.mixer.Sound('assets/audio/point' + soundExt)
     SOUNDS['swoosh'] = pygame.mixer.Sound('assets/audio/swoosh' + soundExt)
     SOUNDS['wing']   = pygame.mixer.Sound('assets/audio/wing' + soundExt)
 
     while True:
-        # select random background sprites
+
         randBg = random.randint(0, len(BACKGROUNDS_LIST) - 1)
         IMAGES['background'] = pygame.image.load(BACKGROUNDS_LIST[randBg]).convert()
 
-        # select random player sprites
         randPlayer = random.randint(0, len(PLAYERS_LIST) - 1)
         IMAGES['player'] = (
-            # randon sayı ıle kusun rengı belırnenıyor. sonrasında 0-1-2 ıle kusun kanatlarının durumları eklenıyor
+            # randon sayi ile kusun rengi belirneniyor. sonrasinda 0-1-2 ile kusun kanatlarinin durumlari ekleniyor
             pygame.image.load(PLAYERS_LIST[randPlayer][0]).convert_alpha(),
             pygame.image.load(PLAYERS_LIST[randPlayer][1]).convert_alpha(),
             pygame.image.load(PLAYERS_LIST[randPlayer][2]).convert_alpha()
         )
 
-        # select random pipe sprites
         pipeindex = random.randint(0, len(PIPES_LIST) - 1)
         IMAGES['pipe'] = (
             pygame.transform.flip(
@@ -108,13 +122,13 @@ def main():
             pygame.image.load(PIPES_LIST[pipeindex]).convert_alpha(),
         )
 
-        # hismask for pipes
+        # pipeleri kirpiyor
         HITMASKS['pipe'] = (
             getHitmask(IMAGES['pipe'][0]),
             getHitmask(IMAGES['pipe'][1]),
         )
 
-        # hitmask for player
+        # kuslari kirpiyir
         HITMASKS['player'] = (
             getHitmask(IMAGES['player'][0]),
             getHitmask(IMAGES['player'][1]),
@@ -127,11 +141,10 @@ def main():
 
 
 def showWelcomeAnimation():
-    """Shows welcome screen animation of flappy bird"""
-    # 
+    """kusun giristeki hareketleri ve konumu"""
+
     playerIndex = 0
     playerIndexGen = cycle([0, 1, 2, 1])
-    # 
     loopIter = 0
 
     playerx = int(SCREENWIDTH * 0.2)
@@ -141,20 +154,20 @@ def showWelcomeAnimation():
     messagey = int(SCREENHEIGHT * 0.12)
 
     basex = 0
-    # amount by which base can maximum shift to left
+    # base shift
     baseShift = IMAGES['base'].get_width() - IMAGES['background'].get_width()
 
-    # player shm for  up-down motion on welcome screen
+    # giristeki asagi yukari haraketi
     playerShmVals = {'val': 0, 'dir': 1 }
 
     while True:
         for event in pygame.event.get():
-            # oyunu kapatan kontrol esc-quıt
+            # oyunu kapatan kontrol esc-quit
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
-            if event.type == KEYDOWN and (event.key == K_SPACE ):
-                # make first flap sound and return values for mainGame
+            if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP or event.key == K_DOWN):
+                #ilk kanat sesi ve oyunun baslamasi
                 SOUNDS['wing'].play()
                 return {
                     'playery': playery + playerShmVals['val'],
@@ -162,15 +175,15 @@ def showWelcomeAnimation():
                     'playerIndexGen': playerIndexGen,
                 }
 
-        # adjust playery, playerIndex, basex
-        #hazır
+
+        #hazir
         if (loopIter + 1) % 5 == 0:
             playerIndex = next(playerIndexGen)
         loopIter = (loopIter + 1) % 30
         basex = -((-basex + 4) % baseShift)
         playerShm(playerShmVals)
 
-        # draw sprites
+
         SCREEN.blit(IMAGES['background'], (0,0))
         SCREEN.blit(IMAGES['player'][playerIndex],
                     (playerx, playery + playerShmVals['val']))
@@ -189,38 +202,36 @@ def mainGame(movementInfo):
     basex = movementInfo['basex']
     baseShift = IMAGES['base'].get_width() - IMAGES['background'].get_width()
 
-    # get 2 new pipes to add to upperPipes lowerPipes list
+    # 2 tane yeni pipe üretme randoom(alt ve üst pipe
     newPipe1 = getRandomPipe()
     newPipe2 = getRandomPipe()
 
-    # list of upper pipes
+    #yukardaki pipe listesi
     upperPipes = [
         {'x': SCREENWIDTH + 200, 'y': newPipe1[0]['y']},
         {'x': SCREENWIDTH + 200 + (SCREENWIDTH / 2), 'y': newPipe2[0]['y']},
     ]
 
-    # list of lowerpipe
+    # asagidaki pipe listesi
     lowerPipes = [
         {'x': SCREENWIDTH + 200, 'y': newPipe1[1]['y']},
         {'x': SCREENWIDTH + 200 + (SCREENWIDTH / 2), 'y': newPipe2[1]['y']},
     ]
 
-    # cubukların sola kayma hızı
+    # cubuklarin sola kayma hizi
     pipeVelX = -4
 
-    # player velocity, max velocity, downward accleration, accleration on flap
-    playerVelY    =  -9   # player's velocity along Y, default same as playerFlapped
+
+    playerVelY    =  -9 # player's velocity along Y, default same as playerFlapped
     playerMaxVelY =  10   # max vel along Y, max descend speed
     playerMinVelY =  -8   # min vel along Y, max ascend speed
-    playerAccY    =   0   # players downward accleration
-    playerRot     =  45   # player's rotation
-    playerVelRot  =   3   # angular speed
+    playerAccY    =   1  # players downward accleration
+    playerRot     = 45 # player's rotation
+    playerVelRot  =  3   # angular speed
     playerRotThr  =  20   # rotation threshold
     playerFlapAcc =  -9   # players speed on flapping
     playerFlapped = False # True when player flaps
     playerKey = False
-    leftb = False
-    rightb = False
 
     while True:
         for event in pygame.event.get():
@@ -237,27 +248,14 @@ def mainGame(movementInfo):
                     playerVelY = -playerFlapAcc
                     playerFlapped = True
                     SOUNDS['wing'].play()
-
-            if event.type == KEYDOWN and event.key == K_RIGHT:
-                rightb = True
-            if  event.type == KEYDOWN and  event.key == K_LEFT:
-                leftb = True
-            if event.type == KEYUP and event.key == K_RIGHT:
-                rightb = False
-            if  event.type == KEYUP and  event.key == K_LEFT:
-                leftb = False
-            if rightb:
-                playerx=1.15*playerx+20
-            if leftb:
-                playerx=0.8*playerx-20
             if event.type == KEYDOWN and (event.key == K_DOWN or event.key == K_UP):
                 playerKey = True
             if event.type == KEYUP and (event.key == K_DOWN or event.key == K_UP):
                 playerKey = False
             if not playerKey:
-                playerVelY = playerVelY / 8         
+                playerVelY = playerVelY / 8
 
-        # check for crash here
+        # carpma kontrol
         crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
                                upperPipes, lowerPipes)
         if crashTest[0]:
@@ -272,13 +270,13 @@ def mainGame(movementInfo):
                 'playerRot': playerRot
             }
 
-        # check for score
+        # skoru kontrol
         playerMidPos = playerx + IMAGES['player'][0].get_width() / 2
         for pipe in upperPipes:
             pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
             if pipeMidPos <= playerMidPos < pipeMidPos + 4:
                 score += 1
-              
+                SOUNDS['point'].play()
 
         # playerIndex basex change
         if (loopIter + 1) % 3 == 0:
@@ -286,40 +284,40 @@ def mainGame(movementInfo):
         loopIter = (loopIter + 1) % 30
         basex = -((-basex + 100) % baseShift)
 
-        # rotate the player
+        # kusu dondurme
         if playerRot > -90:
             playerRot -= playerVelRot
 
-        # player's movement
+        # kusun haraketi
         if playerVelY < playerMaxVelY and not playerFlapped:
-            playerVelY = playerAccY
+            playerVelY += playerAccY
         if playerFlapped:
             playerFlapped = False
 
-            # more rotation to cover the threshold (calculated in visible rotation)
+
             playerRot = 45
 
         playerHeight = IMAGES['player'][playerIndex].get_height()
         playery += min(playerVelY, BASEY - playery - playerHeight)
 
-        # move pipes to left
+        # pipelerin sola hareketi
         for uPipe, lPipe in zip(upperPipes, lowerPipes):
             uPipe['x'] += pipeVelX
             lPipe['x'] += pipeVelX
 
-        # add new pipe when first pipe is about to touch left of screen
+        # yeni pipe ekleme
         if 0 < upperPipes[0]['x'] < 5:
             newPipe = getRandomPipe()
             upperPipes.append(newPipe[0])
             lowerPipes.append(newPipe[1])
 
-        # remove first pipe if its out of the screen
+        # ekrandan cikan pipe  silme
         if upperPipes[0]['x'] < -IMAGES['pipe'][0].get_width():
             upperPipes.pop(0)
             lowerPipes.pop(0)
 
-        # draw sprites
-        # blit: ekran resımlerını belırlerken kullnılıyor
+
+        # blit: ekran resimlerini belirlerken kullniliyor
         SCREEN.blit(IMAGES['background'], (0,0))
 
         for uPipe, lPipe in zip(upperPipes, lowerPipes):
@@ -327,10 +325,10 @@ def mainGame(movementInfo):
             SCREEN.blit(IMAGES['pipe'][1], (lPipe['x'], lPipe['y']))
 
         SCREEN.blit(IMAGES['base'], (basex, BASEY))
-        # print score so player overlaps the score
+        # scoru basma
         showScore(score)
 
-        # Player rotation has a threshold
+
         visibleRot = playerRotThr
         if playerRot <= playerRotThr:
             visibleRot = playerRot
@@ -360,34 +358,34 @@ def showGameOverScreen(crashInfo):
     # play hit and die sounds
     SOUNDS['hit'].play()
     if not crashInfo['groundCrash']:
-        SOUNDS['die'].play()
-        #SOUNDS['die'].music.load('assets/audio/a.mp3')
-        #pygame.mixer.music.play(0)
+       # SOUNDS['die'].play()
+        SOUNDS['die'].music.load('assets/audio/a.mp3')
+        pygame.mixer.music.play(0)
 
     while True:
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
-            if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
+            if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP or event.key == K_DOWN):
                 if playery + playerHeight >= BASEY - 1:
                     return
 
-        # player y shift
+        # kusun y de kaymasi
         if playery + playerHeight < BASEY - 1:
             playery += min(playerVelY, BASEY - playery - playerHeight)
 
-        # player velocity change
-        # yandıgında ekranda dusus hızı
+
+        # yandiginda ekranda dusus hizi
         if playerVelY < 15:
             playerVelY += playerAccY
 
-        # rotate only when it's a pipe crash
+        # pipeye carpinca düserken ki rotastonu
         if not crashInfo['groundCrash']:
             if playerRot > -90:
                 playerRot -= playerVelRot
 
-        # draw sprites
+
         SCREEN.blit(IMAGES['background'], (0,0))
 
         for uPipe, lPipe in zip(upperPipes, lowerPipes):
@@ -417,8 +415,8 @@ def playerShm(playerShm):
 
 
 def getRandomPipe():
-    """returns a randomly generated pipe"""
-    # y of gap between upper and lower pipe
+    """random pipe üretme fonksiyonu"""
+
     gapY = random.randrange(0, int(BASEY * 0.6 - PIPEGAPSIZE))
     gapY += int(BASEY * 0.2)
     pipeHeight = IMAGES['pipe'][0].get_height()
@@ -431,9 +429,9 @@ def getRandomPipe():
 
 
 def showScore(score):
-    """displays score in center of screen"""
+    """scoru gosteren ekran"""
     scoreDigits = [int(x) for x in list(str(score))]
-    totalWidth = 0 # total width of all numbers to be printed
+    totalWidth = 0
 
     for digit in scoreDigits:
         totalWidth += IMAGES['numbers'][digit].get_width()
@@ -446,12 +444,12 @@ def showScore(score):
 
 
 def checkCrash(player, upperPipes, lowerPipes):
-    """returns True if player collders with base or pipes."""
+
     pi = player['index']
     player['w'] = IMAGES['player'][0].get_width()
     player['h'] = IMAGES['player'][0].get_height()
 
-    # if player crashes into ground
+    # eger yere carparsa
     if player['y'] + player['h'] >= BASEY - 1:
         return [True, True]
     else:
@@ -462,16 +460,16 @@ def checkCrash(player, upperPipes, lowerPipes):
         pipeH = IMAGES['pipe'][0].get_height()
 
         for uPipe, lPipe in zip(upperPipes, lowerPipes):
-            # upper and lower pipe rects
+
             uPipeRect = pygame.Rect(uPipe['x'], uPipe['y'], pipeW, pipeH)
             lPipeRect = pygame.Rect(lPipe['x'], lPipe['y'], pipeW, pipeH)
 
-            # player and upper/lower pipe hitmasks
+
             pHitMask = HITMASKS['player'][pi]
             uHitmask = HITMASKS['pipe'][0]
             lHitmask = HITMASKS['pipe'][1]
 
-            # if bird collided with upipe or lpipe
+            # eger ust yada alt pipe ye carparsa
             uCollide = pixelCollision(playerRect, uPipeRect, pHitMask, uHitmask)
             lCollide = pixelCollision(playerRect, lPipeRect, pHitMask, lHitmask)
 
@@ -481,7 +479,7 @@ def checkCrash(player, upperPipes, lowerPipes):
     return [False, False]
 
 def pixelCollision(rect1, rect2, hitmask1, hitmask2):
-    """Checks if two objects collide and not just their rects"""
+
     rect = rect1.clip(rect2)
 
     if rect.width == 0 or rect.height == 0:
@@ -497,7 +495,7 @@ def pixelCollision(rect1, rect2, hitmask1, hitmask2):
     return False
 
 def getHitmask(image):
-    """returns a hitmask using an image's alpha."""
+
     mask = []
     for x in xrange(image.get_width()):
         mask.append([])

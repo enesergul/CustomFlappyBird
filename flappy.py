@@ -1,3 +1,8 @@
+## @Author  : enesergul
+## @Time    : 07/2019
+## @OS      : Win10
+## @Software: PyCharm
+
 from itertools import cycle
 import random
 import sys
